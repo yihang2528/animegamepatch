@@ -131,3 +131,34 @@ pub unsafe fn pattern_scan_il2cpp(module: &str, pattern: &str) -> Option<*mut u8
         Some(loc) => Some((il2cpp_base.wrapping_add(loc)) as *mut u8),
     }
 }
+
+pub unsafe fn il2cpp_section_range(module: &str) -> Option<(*mut u8, usize)> {
+    let w_module_name = wide_str(module);
+
+    let module_handle = match GetModuleHandleW(PCWSTR::from_raw(w_module_name.as_ptr())) {
+        Ok(module) => Some(module.0 as usize),
+        Err(_) => panic!("Failed to get module handle"),
+    };
+
+    let module_handle_addr = module_handle.unwrap();
+    let mod_base = module_handle_addr as *const u8;
+    let dos_header = unsafe { &*(mod_base as *const IMAGE_DOS_HEADER) };
+    let nt_headers = unsafe { &*((mod_base.offset(dos_header.e_lfanew as isize)) as *const IMAGE_NT_HEADERS) };
+
+    let section_headers = unsafe {
+        std::slice::from_raw_parts(
+            (mod_base.offset(dos_header.e_lfanew as isize) as *const u8)
+                .offset(std::mem::size_of::<IMAGE_NT_HEADERS>() as isize)
+                as *const IMAGE_SECTION_HEADER,
+            nt_headers.FileHeader.NumberOfSections as usize,
+        )
+    };
+    let il2cpp_section = section_headers.iter().find(|section| {
+        let name = std::ffi::CStr::from_ptr(section.Name.as_ptr() as *const i8).to_str().unwrap_or("");
+        name == "il2cpp"
+    })?;
+
+    let il2cpp_base = mod_base.offset(il2cpp_section.VirtualAddress as isize) as *mut u8;
+    let il2cpp_size = il2cpp_section.SizeOfRawData as usize;
+    Some((il2cpp_base, il2cpp_size))
+}

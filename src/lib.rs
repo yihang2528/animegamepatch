@@ -17,7 +17,7 @@ mod marshal;
 mod modules;
 mod util;
 
-use crate::modules::{Http, MhyContext, ModuleManager, Security, WinHttp};
+use crate::modules::{FpsUnlock, Http, MhyContext, ModuleManager, Security, WinHttp};
 
 unsafe fn thread_func() {
     let mut module_manager = MODULE_MANAGER.write().unwrap();
@@ -48,6 +48,7 @@ unsafe fn thread_func() {
     marshal::find();
     module_manager.enable(MhyContext::<Http>::new(&exe_name));
     module_manager.enable(MhyContext::<Misc>::new(&exe_name));
+    module_manager.enable(MhyContext::<FpsUnlock>::new(&exe_name));
 
     // the account sdk uses winhttp, not the C# path above
     module_manager.enable(MhyContext::<WinHttp>::new(&exe_name));

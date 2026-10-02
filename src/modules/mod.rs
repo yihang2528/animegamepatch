@@ -5,12 +5,14 @@ use anyhow::Result;
 use crate::interceptor::Interceptor;
 
 mod ccp_blocker;
+mod fps_unlock;
 mod http;
 mod misc;
 mod security;
 mod winhttp;
 
 pub use ccp_blocker::CcpBlocker;
+pub use fps_unlock::FpsUnlock;
 pub use http::Http;
 pub use misc::Misc;
 pub use security::Security;
@@ -47,6 +49,7 @@ pub enum ModuleType {
     Misc,
     CcpBlocker,
     WinHttp,
+    FpsUnlock,
 }
 
 pub trait MhyModule {
