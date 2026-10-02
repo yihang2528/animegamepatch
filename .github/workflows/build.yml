@@ -1,0 +1,17 @@
+name: Build ext.dll
+on:
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install nightly Rust
+        uses: dtolnay/rust-toolchain@nightly
+      - name: Build
+        run: cargo build --release
+      - name: Upload ext.dll
+        uses: actions/upload-artifact@v4
+        with:
+          name: ext-dll
+          path: target/release/ext.dll
